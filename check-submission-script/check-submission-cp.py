@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Author: Han Liang Wee Eric
-# NUS Property, no not distribute
+# GPL License
 
 import os
 import re
@@ -39,7 +39,7 @@ files = [f for f in os.listdir('.') if re.match(r'Team[0-9][0-9]', f)]
 if len(files) > 1:
     print("[Failed] - This script cannot be executed with multiple teams' folders.")
     sys.exit()
-    
+
 if len(files) == 0:
     print("[Failed] - This script cannot find the Team folder, please make sure it exist and named correctly.")
     sys.exit()
@@ -51,20 +51,19 @@ team_no = int(team_no_str)
 if team_no < 1:
     print("[Failed] - Team number must be valid.")
     sys.exit()
-    
+
 print("[Passed] - Single team folder detected, Team number is {}.".format(team_no) )
 
 sub_dir_files = [ f for f in os.listdir(os.path.join(team_folder)) ]
-if len(sub_dir_files) != 3:
-    print("[Failed] - Must only contain 3 items: Tests dir, Code dir and report pdf")
+if len(sub_dir_files) < 2 or len(sub_dir_files) > 3:
+    print("[Failed] - Must only contain 2 - 3 items: Tests dir and Code dir, and a report pdf if submission requires")
     sys.exit()
 
 sub_dirs_compliance = {
     "code" : "Code{}".format(team_no_str),
-    "report" : "Team{}.pdf".format(team_no_str),
     "tests" : "Tests{}".format(team_no_str)
 }
-sub_dirs = check_compliance(sub_dirs_compliance, sub_dir_files, os.path.join(team_folder)) 
+sub_dirs = check_compliance(sub_dirs_compliance, sub_dir_files, os.path.join(team_folder))
 
 base_code_path = sub_dirs['code']
 base_tests_path = sub_dirs['tests']
@@ -74,11 +73,8 @@ for f in sub_dirs:
 # now we check the code compliance
 code_sub_dirs_compliance = {
     "readme" : "Readme.txt",
-    "sln" : "StartupSPASolution.sln",
-    "source" : "source",
-    "autotester" : "AutoTester",
-    "UnitTesting" : "UnitTesting",
-    "IntegrationTesting" : "IntegrationTesting",
+    "cmakelists" : "CMakeLists.txt",
+    "src" : "src",
     "contact" : "Contact.csv"
 }
 code_sub_dirs = check_compliance(code_sub_dirs_compliance, os.listdir(os.path.join(base_code_path)), base_code_path)
@@ -128,4 +124,16 @@ for root, dirnames, filenames in os.walk("."):
 
 # Now we have established correct subdirs
 print("="*80)
-print("Project conforms to basic submission requirements.")
+print("Project conforms to basic submission requirements if report is not required.")
+print("="*80)
+
+# Check for exitence of report
+report_compliance = {
+    "report" : "Team{}.pdf".format(team_no_str),
+}
+report_dirs = check_compliance(report_compliance, sub_dir_files, os.path.join(team_folder))
+for f in report_dirs:
+    print("[Passed] - Found correctly formatted {}: {}".format(f, report_dirs[f]))
+
+print("="*80)
+print("Project conforms to basic submission requirements if report is required.")
